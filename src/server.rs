@@ -1,4 +1,8 @@
-use std::net::TcpListener;
+use std::{net::TcpListener, io::Read};
+use crate::http::Request;
+use crate::http::request;
+use std::convert::TryFrom;
+use std::convert::TryInto;
 pub struct Server {
         addr: String
     }
@@ -9,9 +13,30 @@ pub struct Server {
         }
     
     pub fn run(self) {
-            print!("Listening on port {}", self.addr);
+        println!("Listening on port {}", self.addr);
 
             let listener = TcpListener::bind(&self.addr).unwrap();
+
+            loop {
+                match listener.accept() {
+                    Ok((mut stream, _)) => {
+                        let mut buffer = [0; 1024];
+                        match stream.read(&mut buffer) {
+                            Ok(_) => {
+                                println!("Received a request: {}", String::from_utf8_lossy(&buffer));
+
+                               match Request::try_from(&buffer[..]) {
+                                Ok(request) => {}
+                                Err(e) => println!("Failed to parse the request", e),
+                               }
+                               
+                            },
+                            Err(e) => println!("Failed to run read from  connection: {}", e),
+                        }
+                    }
+                    Err(e) => println!("Failed to establish a connection. {}", e),
+                }
+            }
         }
     }
 

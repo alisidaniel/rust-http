@@ -1,3 +1,4 @@
+pub use request::ParseError;
 pub use request::Request;
 pub use method::Method;
 
